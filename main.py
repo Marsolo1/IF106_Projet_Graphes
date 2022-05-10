@@ -20,7 +20,7 @@ def makeWorld(N, Main, Sleeping, Obstacles):
     return world
 
 
-def TowardAwakeRobot(world, robotA, robotS):
+def TowardAwakeRobot(robotA, robotS):
     xa = robotA[0]
     ya = robotA[1]
 
@@ -45,5 +45,16 @@ def TowardAwakeRobot(world, robotA, robotS):
 
 
 def closestRobot(world, robotA):
-    # Penser à faire à map
-    return 0
+    """Look for the closest robot"""
+    n = len(world)
+    arr = [n, n]
+    for i in range(n):
+        for j in range(n):
+            if world[i, j] != "":
+                rs = robotA, world[i, j]
+                diff_x = abs(rs[0] - robotA[0])
+                diff_y = abs(rs[1] - robotA[1])
+                if (arr[n] + arr[n] > diff_x + diff_y):
+                    arr = [rs[0], rs[1]]
+
+    return arr
