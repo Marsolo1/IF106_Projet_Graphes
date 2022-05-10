@@ -1,13 +1,9 @@
 import numpy as np
 import pygame as pg
 
-Awake = 0
-
-
 class World:
 	def __init__(self, N, Main, Sleeping, Obstacles=None):
 		self.N = N
-		self.World = np.zeros((N, N))
 		self.Main = Main
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
@@ -19,21 +15,6 @@ class Robot:
 		self.x = x
 		self.y = y
 
-
-def makeWorld(N, Main, Sleeping, Obstacles):
-	"""
-	Creates a world with NxN cells and Robots robots.
-	"""
-	global Awake
-	world = np.ndarray.fill(np.ndarray(shape=(N, N)), "")
-	world[Main[0]][Main[1]] = "M"+str(Awake)
-	Awake += 1
-	for r in Sleeping:
-		world[r[0], r[1]] += "S"
-	for o in Obstacles:
-		world[o[0], o[1]] = -1
-
-	return world
 
 
 def TowardAwakeRobot(robotA, robotS):
