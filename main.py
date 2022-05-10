@@ -13,6 +13,9 @@ class Robot:
 		self.type = type
 		self.x = x
 		self.y = y
+	
+	def wakeUp(self):
+		self.type = "A"
 
 def TowardAwakeRobot(robotA, robotS):
 	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
@@ -59,12 +62,12 @@ if __name__ == "__main__":
 				running = False
 		screen.fill((255,255,255))
 		TowardAwakeRobot(Main, closestRobot(w, Main))
-		pg.draw.rect(screen, (0,100,100), (w.Main.x*psize, w.Main.y*psize, psize, psize))
+		pg.draw.rect(screen, (0,100,100), (w.Awake.x*psize, w.Awake.y*psize, psize, psize))
 		for r in w.Sleeping:
 			pg.draw.rect(screen, (255, 0, 0), (r.x*psize, r.y*psize, psize, psize))
 		
-		closest = closestRobot(w, w.Main)
-		pg.draw.line(screen, (0,0,0), (w.Main.x*psize, w.Main.y*psize), (closest.x*psize, closest.y*psize))
+		closest = closestRobot(w, w.Awake)
+		pg.draw.line(screen, (0,0,0), (w.Awake.x*psize, w.Awake.y*psize), (closest.x*psize, closest.y*psize))
 		pg.display.flip()
 		pg.time.delay(1000)
 		clock.tick(100)
