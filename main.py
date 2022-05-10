@@ -12,73 +12,59 @@ class World:
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
 
-class Robot:
-    def __init__(self, type: str, x: int, y: int):
-        self.type = type
-        self.x = x
-        self.y = y
 
-    def move(self, dx: int, dy: int):
-        self.x += dx
-        self.y += dy
+class Robot:
+	def __init__(self, type: str, x: int, y: int):
+		self.type = type
+		self.x = x
+		self.y = y
 
 
 def makeWorld(N, Main, Sleeping, Obstacles):
-    """
-    Creates a world with NxN cells and Robots robots.
-    """
-    global Awake
-    world = np.ndarray.fill(np.ndarray(shape=(N, N)), "")
-    world[Main[0]][Main[1]] = "M"+str(Awake)
-    Awake += 1
-    for r in Sleeping:
-        world[r[0], r[1]] += "S"
-    for o in Obstacles:
-        world[o[0], o[1]] = -1
+	"""
+	Creates a world with NxN cells and Robots robots.
+	"""
+	global Awake
+	world = np.ndarray.fill(np.ndarray(shape=(N, N)), "")
+	world[Main[0]][Main[1]] = "M"+str(Awake)
+	Awake += 1
+	for r in Sleeping:
+		world[r[0], r[1]] += "S"
+	for o in Obstacles:
+		world[o[0], o[1]] = -1
 
-    return world
+	return world
 
 
 def TowardAwakeRobot(robotA, robotS):
-    xa = robotA[0]
-    ya = robotA[1]
+	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
+	diff_x = robotA.x - robotS.x
+	diff_y = robotA.y - robotS.y
 
-    xs = robotS[0]
-    ys = robotS[1]
-
-    diff_x = xa-xs
-    diff_y = ya-ys
-
-    if abs(diff_x) > abs(diff_y):
-        if diff_x > 0:
-            xa -= 1
-        if diff_x < 0:
-            xa += 1
-    else:
-        if diff_y > 0:
-            ya -= 1
-        if diff_y < 0:
-            ya += 1
-
-    return [xa, ya]
+	if abs(diff_x) > abs(diff_y):
+		if diff_x > 0:
+			robotA.x -= 1
+		if diff_x < 0:
+			robotA.x += 1
+	else:
+		if diff_y > 0:
+			robotS.y -= 1
+		if diff_y < 0:
+			robotS.y += 1
 
 
 def closestRobot(world, robotA):
-    """Look for the closest robot"""
-    n = len(world)
-    arr = [n, n]
-    for i in range(n):
-        for j in range(n):
-            if world[i, j] != "":
-                rs = robotA, world[i, j]
-                diff_x = abs(rs[0] - robotA[0])
-                diff_y = abs(rs[1] - robotA[1])
-                if (arr[n] + arr[n] > diff_x + diff_y):
-                    arr = [rs[0], rs[1]]
-
-    return arr
-    # Penser à faire à map
-    return 0
+	"""Look for the closest robot"""
+	n = len(world.world)
+	x_max, y_max = n, n
+	r = None
+	for robot in world.Sleeping:
+		diff_x = abs(robot.x - robotA.x)
+		diff_y = abs(robot.y - robotA.y)
+		if (x_max + y_max > diff_x + diff_y):
+			x_max, y_max = robotA.x, robotA.y
+			r = robot
+	return r
 
 
 if __name__ == "__main__":
@@ -95,10 +81,12 @@ if __name__ == "__main__":
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				running = False
-		screen.fill((255,255,255))
-		pg.draw.rect(screen, (0,100,100), (w.Main[0]*psize, w.Main[1]*psize, psize, psize))
+		screen.fill((255, 255, 255))
+		pg.draw.rect(screen, (0, 100, 100),
+					 (w.Main[0]*psize, w.Main[1]*psize, psize, psize))
 		for r in w.Sleeping:
-			pg.draw.rect(screen, (255, 0, 0), (r[0]*psize, r[1]*psize, psize, psize))
+			pg.draw.rect(screen, (255, 0, 0),
+						 (r[0]*psize, r[1]*psize, psize, psize))
 		pg.display.flip()
 		clock.tick(60)
 	pg.quit()
