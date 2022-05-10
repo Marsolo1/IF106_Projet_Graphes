@@ -19,48 +19,35 @@ class Robot:
         self.y += dy
 
 
-
 def TowardAwakeRobot(robotA, robotS):
-    xa = robotA[0]
-    ya = robotA[1]
+	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
+	diff_x = robotA.x - robotS.x
+	diff_y = robotA.y - robotS.y
 
-    xs = robotS[0]
-    ys = robotS[1]
-
-    diff_x = xa-xs
-    diff_y = ya-ys
-
-    if abs(diff_x) > abs(diff_y):
-        if diff_x > 0:
-            xa -= 1
-        if diff_x < 0:
-            xa += 1
-    else:
-        if diff_y > 0:
-            ya -= 1
-        if diff_y < 0:
-            ya += 1
-
-    return [xa, ya]
+	if abs(diff_x) > abs(diff_y):
+		if diff_x > 0:
+			robotA.x -= 1
+		if diff_x < 0:
+			robotA.x += 1
+	else:
+		if diff_y > 0:
+			robotA.y -= 1
+		if diff_y < 0:
+			robotA.y += 1
 
 
 def closestRobot(world, robotA):
-    """Look for the closest robot"""
-    n = len(world)
-    arr = [n, n]
-    for i in range(n):
-        for j in range(n):
-            if world[i, j] != "":
-                rs = robotA, world[i, j]
-                diff_x = abs(rs[0] - robotA[0])
-                diff_y = abs(rs[1] - robotA[1])
-                if (arr[n] + arr[n] > diff_x + diff_y):
-                    arr = [rs[0], rs[1]]
-
-    return arr
-    # Penser à faire à map
-    return 0
-
+	"""Look for the closest robot"""
+	n = world.N
+	x_max, y_max = n, n
+	r = None
+	for robot in world.Sleeping:
+		diff_x = abs(robot.x - robotA.x)
+		diff_y = abs(robot.y - robotA.y)
+		if (x_max + y_max > diff_x + diff_y):
+			x_max, y_max = robotA.x, robotA.y
+			r = robot
+	return r
 
 if __name__ == "__main__":
 	N = 20
@@ -77,10 +64,15 @@ if __name__ == "__main__":
 			if event.type == pg.QUIT:
 				running = False
 		screen.fill((255,255,255))
+		TowardAwakeRobot(Main, closestRobot(w, Main))
 		pg.draw.rect(screen, (0,100,100), (w.Main.x*psize, w.Main.y*psize, psize, psize))
 		for r in w.Sleeping:
 			pg.draw.rect(screen, (255, 0, 0), (r.x*psize, r.y*psize, psize, psize))
+		
+		closest = closestRobot(w, w.Main)
+		pg.draw.line(screen, (0,0,0), (w.Main.x*psize, w.Main.y*psize), (closest.x*psize, closest.y*psize))
 		pg.display.flip()
-		clock.tick(60)
+		pg.time.delay(1000)
+		clock.tick(100)
 	pg.quit()
 	quit()
