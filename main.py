@@ -4,7 +4,7 @@ import pygame as pg
 class World:
 	def __init__(self, Sleeping, N = None, Main = None, Obstacles=None):
 		self.N = N
-		self.Main = Main
+		self.Awake = Main
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
 	
@@ -22,12 +22,14 @@ class World:
 				self.Sleeping.append(Robot("S", x, y))
 		f.close()
 
-
 class Robot:
 	def __init__(self, type: str, x: int, y: int):
 		self.type = type
 		self.x = x
 		self.y = y
+	
+	def wakeUp(self):
+		self.type = "A"
 
 def TowardAwakeRobot(robotA, robotS):
 	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
@@ -45,10 +47,9 @@ def TowardAwakeRobot(robotA, robotS):
 		if diff_y < 0:
 			robotA.y += 1
 
-
 def closestRobot(world, robotA):
 	"""Look for the closest robot"""
-	n = len(world.world)
+	n = world.N
 	x_max, y_max = n, n
 	r = None
 	for robot in world.Sleeping:
@@ -58,7 +59,6 @@ def closestRobot(world, robotA):
 			x_max, y_max = robotA.x, robotA.y
 			r = robot
 	return r
-
 
 if __name__ == "__main__":
 	N = 20
@@ -74,10 +74,15 @@ if __name__ == "__main__":
 			if event.type == pg.QUIT:
 				running = False
 		screen.fill((255,255,255))
-		pg.draw.rect(screen, (0,100,100), (w.Main.x*psize, w.Main.y*psize, psize, psize))
+		TowardAwakeRobot(Main, closestRobot(w, Main))
+		pg.draw.rect(screen, (0,100,100), (w.Awake.x*psize, w.Awake.y*psize, psize, psize))
 		for r in w.Sleeping:
 			pg.draw.rect(screen, (255, 0, 0), (r.x*psize, r.y*psize, psize, psize))
+		
+		closest = closestRobot(w, w.Awake)
+		pg.draw.line(screen, (0,0,0), (w.Awake.x*psize, w.Awake.y*psize), (closest.x*psize, closest.y*psize))
 		pg.display.flip()
-		clock.tick(60)
+		pg.time.delay(1000)
+		clock.tick(100)
 	pg.quit()
 	quit()
