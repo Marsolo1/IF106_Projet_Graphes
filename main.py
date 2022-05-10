@@ -2,11 +2,25 @@ import numpy as np
 import pygame as pg
 
 class World:
-	def __init__(self, N, Main, Sleeping, Obstacles=None):
+	def __init__(self, Sleeping, N = None, Main = None, Obstacles=None):
 		self.N = N
 		self.Main = Main
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
+	
+	def init_world_from_file (self, N, filename):
+		data = []
+		f = open(filename, 'r')
+		for line in f:
+			l = line.strip().split(" : ")
+			x = int(l[1].split(",")[0][1:])
+			y = int (l[1].split(",")[1][:-1])
+			#We suppose that there are only robots and no obstacles
+			if l[0] == 'R':
+				self.Main = Robot("A", x, y)
+			else:
+				self.Sleeping.append(Robot("S", x, y))
+		f.close()
 
 
 class Robot:
@@ -14,8 +28,6 @@ class Robot:
 		self.type = type
 		self.x = x
 		self.y = y
-
-
 
 def TowardAwakeRobot(robotA, robotS):
 	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
@@ -29,9 +41,9 @@ def TowardAwakeRobot(robotA, robotS):
 			robotA.x += 1
 	else:
 		if diff_y > 0:
-			robotS.y -= 1
+			robotA.y -= 1
 		if diff_y < 0:
-			robotS.y += 1
+			robotA.y += 1
 
 
 def closestRobot(world, robotA):
@@ -51,9 +63,8 @@ def closestRobot(world, robotA):
 if __name__ == "__main__":
 	N = 20
 	psize = 20
-	Main = Robot("A", N//2, N//2)
-	Sleeping = [Robot('S',x, y) for (x,y) in [[0, 5], [5, 6], [12, 7]]]
-	w = World(N, Main, Sleeping)
+	w = World([])
+	w.init_world_from_file(N, "test.txt")
 	pg.init()
 	screen = pg.display.set_mode((N*psize, N*psize))
 	clock = pg.time.Clock()
