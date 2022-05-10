@@ -4,17 +4,15 @@ import pygame as pg
 class World:
 	def __init__(self, N, Main, Sleeping, Obstacles=None):
 		self.N = N
-		self.Main = Main
+		self.Awake = Main
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
-
 
 class Robot:
 	def __init__(self, type: str, x: int, y: int):
 		self.type = type
 		self.x = x
 		self.y = y
-
 
 def TowardAwakeRobot(robotA, robotS):
 	"""Advance a robot Awake of one pixel towards a sleeping robotS"""
@@ -31,7 +29,6 @@ def TowardAwakeRobot(robotA, robotS):
 			robotA.y -= 1
 		if diff_y < 0:
 			robotA.y += 1
-
 
 def closestRobot(world, robotA):
 	"""Look for the closest robot"""
