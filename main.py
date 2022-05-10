@@ -8,15 +8,12 @@ class World:
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
 
-class Robot:
-    def __init__(self, type: str, x: int, y: int):
-        self.type = type
-        self.x = x
-        self.y = y
 
-    def move(self, dx: int, dy: int):
-        self.x += dx
-        self.y += dy
+class Robot:
+	def __init__(self, type: str, x: int, y: int):
+		self.type = type
+		self.x = x
+		self.y = y
 
 
 def TowardAwakeRobot(robotA, robotS):
