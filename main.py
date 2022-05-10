@@ -1,12 +1,10 @@
-from msilib.schema import Class
 import numpy as np
-import matplotlib.pyplot as plt
 import pygame as pg
 
 Awake = 0
 
 class World:
-	def __init__(self, N, Main, Sleeping, Obstacles):
+	def __init__(self, N, Main, Sleeping, Obstacles=None):
 		self.N = N
 		self.World = np.zeros((N, N))
 		self.Main = Main
@@ -68,16 +66,23 @@ def closestRobot(world, robotA):
     return 0
 
 if __name__ == "__main__":
-	N = 10
+	N = 20
+	psize = 20
+	Main = [10, 10]
+	Sleeping = [[0, 5], [5, 6], [12, 7]]
+	w = World(N, Main, Sleeping)
 	pg.init()
-	screen = pg.display.set_mode((N*50, N*50))
+	screen = pg.display.set_mode((N*psize, N*psize))
 	clock = pg.time.Clock()
 	running = True
 	while running:
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				running = False
-		screen.fill((0, 0, 0))
+		screen.fill((255,255,255))
+		pg.draw.rect(screen, (0,100,100), (w.Main[0]*psize, w.Main[1]*psize, psize, psize))
+		for r in w.Sleeping:
+			pg.draw.rect(screen, (255, 0, 0), (r[0]*psize, r[1]*psize, psize, psize))
 		pg.display.flip()
 		clock.tick(60)
 	pg.quit()
