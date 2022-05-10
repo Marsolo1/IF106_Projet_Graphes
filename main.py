@@ -84,8 +84,8 @@ def closestRobot(world, robotA):
 if __name__ == "__main__":
 	N = 20
 	psize = 20
-	Main = [10, 10]
-	Sleeping = [[0, 5], [5, 6], [12, 7]]
+	Main = Robot("A", N//2, N//2)
+	Sleeping = [Robot('S',x, y) for (x,y) in [[0, 5], [5, 6], [12, 7]]]
 	w = World(N, Main, Sleeping)
 	pg.init()
 	screen = pg.display.set_mode((N*psize, N*psize))
@@ -96,9 +96,9 @@ if __name__ == "__main__":
 			if event.type == pg.QUIT:
 				running = False
 		screen.fill((255,255,255))
-		pg.draw.rect(screen, (0,100,100), (w.Main[0]*psize, w.Main[1]*psize, psize, psize))
+		pg.draw.rect(screen, (0,100,100), (w.Main.x*psize, w.Main.y*psize, psize, psize))
 		for r in w.Sleeping:
-			pg.draw.rect(screen, (255, 0, 0), (r[0]*psize, r[1]*psize, psize, psize))
+			pg.draw.rect(screen, (255, 0, 0), (r.x*psize, r.y*psize, psize, psize))
 		pg.display.flip()
 		clock.tick(60)
 	pg.quit()
