@@ -1,7 +1,29 @@
+from msilib.schema import Class
 import numpy as np
 import matplotlib.pyplot as plt
+import pygame as pg
 
 Awake = 0
+
+
+class World:
+    def __init__(self, N, Main, Sleeping, Obstacles):
+        self.N = N
+        self.World = np.zeros((N, N))
+        self.Main = Main
+        self.Sleeping = Sleeping
+        self.Obstacles = Obstacles
+
+
+class Robot:
+    def __init__(self, type: str, x: int, y: int):
+        self.type = type
+        self.x = x
+        self.y = y
+
+    def move(self, dx: int, dy: int):
+        self.x += dx
+        self.y += dy
 
 
 def makeWorld(N, Main, Sleeping, Obstacles):
@@ -58,3 +80,22 @@ def closestRobot(world, robotA):
                     arr = [rs[0], rs[1]]
 
     return arr
+    # Penser à faire à map
+    return 0
+
+
+if __name__ == "__main__":
+    N = 10
+    pg.init()
+    screen = pg.display.set_mode((N*50, N*50))
+    clock = pg.time.Clock()
+    running = True
+    while running:
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                running = False
+        screen.fill((0, 0, 0))
+        pg.display.flip()
+        clock.tick(60)
+    pg.quit()
+    quit()
