@@ -8,7 +8,7 @@ class World:
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
 	
-	def init_world_from_file (self, N, filename):
+	def init_world_from_file (self, filename):
 		data = []
 		f = open(filename, 'r')
 		for line in f:
@@ -17,7 +17,7 @@ class World:
 			y = int (l[1].split(",")[1][:-1])
 			#We suppose that there are only robots and no obstacles
 			if l[0] == 'R':
-				self.Main = Robot("A", x, y)
+				self.Awake = Robot("A", x, y)
 			else:
 				self.Sleeping.append(Robot("S", x, y))
 		f.close()
@@ -63,8 +63,8 @@ def closestRobot(world, robotA):
 if __name__ == "__main__":
 	N = 20
 	psize = 20
-	w = World([])
-	w.init_world_from_file(N, "test.txt")
+	w = World([], N)
+	w.init_world_from_file("test.txt")
 	pg.init()
 	screen = pg.display.set_mode((N*psize, N*psize))
 	clock = pg.time.Clock()
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 			if event.type == pg.QUIT:
 				running = False
 		screen.fill((255,255,255))
-		TowardAwakeRobot(Main, closestRobot(w, Main))
+		TowardAwakeRobot(w.Awake, closestRobot(w, w.Awake))
 		pg.draw.rect(screen, (0,100,100), (w.Awake.x*psize, w.Awake.y*psize, psize, psize))
 		for r in w.Sleeping:
 			pg.draw.rect(screen, (255, 0, 0), (r.x*psize, r.y*psize, psize, psize))
