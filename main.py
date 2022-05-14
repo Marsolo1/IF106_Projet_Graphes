@@ -9,24 +9,24 @@ class World:
 		self.Obstacles = Obstacles
 		self.Edges = Edges
 	
-	def init_world_from_file (self, N, filename):
-		self.N = N
+	def init_world_from_file (self, filename):
 		f = open(filename, 'r')
 		for line in f:
 			l = line.strip().split(" : ")
-			x = int(l[1].split(",")[0][1:])
-			y = int (l[1].split(",")[1][:-1])
+			x = l[1].split(",")[0][1:]
+			y = l[1].split(",")[1][:-1]
 			#We suppose that there are only robots and no obstacles
 			if l[0] == 'R':
-				self.Awake.append(Robot("A", x, y))
+				self.Awake.append(Robot("A", int(x), int(y)))
 			elif l[0].isnumeric():
-				self.Sleeping.append(Robot("S", x, y))
+				self.Sleeping.append(Robot("S", int(x), int(y)))
 			elif l[0] == 'E':
-				self.Edges.append(
-					(self.Awake[0] if x != 'R' else self.Sleeping[int(x)],
-					self.Awake[0] if y != 'R' else self.Sleeping[int(y)]))
-
+				self.Edges.append((
+					self.Awake[0] if x == 'R' else self.Sleeping[int(x)-1],
+					self.Awake[0] if y == 'R' else self.Sleeping[int(y)-1]
+				))
 		f.close()
+		self.N = max([self.Awake[0].x, self.Awake[0].y] + [r.x for r in self.Sleeping] + [r.y for r in self.Sleeping]) + 1
 
 class Robot:
 	def __init__(self, type: str, x: int, y: int ,targets = None):
@@ -171,22 +171,22 @@ if __name__ == "__main__":
 	N = 20
 	psize = 20
 	w = World()
-	w.init_world_from_file(N, "test.txt")
+	w.init_world_from_file("test2.txt")
 	screen = screenInit(w, psize)
 	running = True
 	while running:
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				running = False
-		screen.fill((255,255,255))
+		screen.fill(pg.Color('black'))
 		robot = w.Awake[0]
 		TowardAwakeRobot(robot, closestRobot(w, robot))
 		pg.draw.circle(screen, pg.Color('red'), (psize*robot.x, psize*robot.y), psize//2)
 		for r in w.Sleeping:
 			pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
 		closest = closestRobot(w, robot)
-		pg.draw.line(screen, (0,0,0), (robot.x*psize, robot.y*psize), (closest.x*psize, closest.y*psize))
+		pg.draw.line(screen, (0,0,0), (robot.x*psize, robot.y*psize), (closest.x*psize, closest.y*psize), width=2)
 		pg.display.flip()
-		pg.time.delay(1000)
+		pg.time.wait(500)
 	pg.quit()
 	quit()
