@@ -2,14 +2,14 @@ import numpy as np
 import pygame as pg
 
 class World:
-	def __init__(self, Sleeping, N = None, Main = None, Obstacles=None):
+	def __init__(self, Sleeping = [], N = 0, Main = None, Obstacles=None):
 		self.N = N
 		self.Awake = Main
 		self.Sleeping = Sleeping
 		self.Obstacles = Obstacles
 	
-	def init_world_from_file (self, filename):
-		data = []
+	def init_world_from_file (self, N, filename):
+		self.N = N
 		f = open(filename, 'r')
 		for line in f:
 			l = line.strip().split(" : ")
@@ -23,7 +23,7 @@ class World:
 		f.close()
 
 class Robot:
-	def __init__(self, type: str, x: int, y: int ,targets):
+	def __init__(self, type: str, x: int, y: int ,targets = None):
 		self.type = type
 		self.x = x
 		self.y = y
@@ -149,7 +149,7 @@ def test_execution():
 		
 	return Sleeping
 			
-print(test_execution())
+# print(test_execution())
 
 
 
@@ -158,8 +158,8 @@ print(test_execution())
 if __name__ == "__main__":
 	N = 20
 	psize = 20
-	w = World([], N)
-	w.init_world_from_file("test.txt")
+	w = World()
+	w.init_world_from_file(N, "test.txt")
 	pg.init()
 	screen = pg.display.set_mode((N*psize, N*psize))
 	clock = pg.time.Clock()
