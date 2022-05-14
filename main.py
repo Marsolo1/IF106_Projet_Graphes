@@ -2,7 +2,7 @@ import numpy as np
 import pygame as pg
 
 class World:
-	def __init__(self, Sleeping = [], N = 0, Main = None, Obstacles=None):
+	def __init__(self, Sleeping = [], N = 0, Main = [], Obstacles=None):
 		self.N = N
 		self.Awake = Main
 		self.Sleeping = Sleeping
@@ -17,7 +17,7 @@ class World:
 			y = int (l[1].split(",")[1][:-1])
 			#We suppose that there are only robots and no obstacles
 			if l[0] == 'R':
-				self.Awake = Robot("A", x, y)
+				self.Awake.append(("A", x, y))
 			else:
 				self.Sleeping.append(Robot("S", x, y))
 		f.close()
@@ -169,6 +169,25 @@ if __name__ == "__main__":
 			if event.type == pg.QUIT:
 				running = False
 		screen.fill((255,255,255))
+		iterations = 0
+		while len(w.Sleeping) > 0:
+			if iterations == 0 :
+				compute_sub_list(w.Awake[0],closestRobot(w, w.Awake[0]))
+				print(w.Awake[0].targets)
+				print(closestRobot(w, w.Awake[0]))
+			for i in range(len(w.Awake)):
+				if len(w.Awake[i].targets)!=0:
+					if are_at_same_place(w.Awake[i],closestRobotInTargets(w.Awake[i], w)) :
+						remove_from_sleeping(w.Awake,w.Sleeping,closestRobotInTargets(w.Awake[i], w))
+						closestRobotInTargets(w.Awake[i], w).wakeUp
+						w.Awake[len(w.Awake)-1].wakeUp
+						remove_from_targets(w.Awake[i],closestRobotInTargets(w.Awake[i], w))
+						if len(w.Awake[i].targets)!=0:
+							TowardAwakeRobot(w.Awake[i], closestRobotInTargets(w.Awake[i], w))
+					else:
+						TowardAwakeRobot(w.Awake[i], closestRobotInTargets(w.Awake[i], w))
+				iterations+=1
+				print(iterations)
 		TowardAwakeRobot(w.Awake, closestRobot(w, w.Awake))
 		pg.draw.rect(screen, (0,100,100), (w.Awake.x*psize, w.Awake.y*psize, psize, psize))
 		for r in w.Sleeping:
