@@ -1,5 +1,6 @@
 import pygame as pg
 import sys
+import random as rd
 
 class World:
 	def __init__(self, N:int=0, Sleeping:list=[], Awake:list=[], Edges:list=[], Obstacles:list=[]):
@@ -32,12 +33,38 @@ class World:
 		screen.fill(pg.Color("lightgray"))
 		for r in self.Awake:
 			pg.draw.circle(screen, pg.Color('red'), (r.x*psize, r.y*psize), psize//2)
+			if len(r.targets) > 0:
+				r_t = closestRobotInTargets(r, self)
+				pg.draw.line(screen, pg.Color("black"), (r.x*psize, r.y*psize), (r_t.x*psize, r_t.y*psize), width=2)
+
+
 		for r in self.Sleeping:
 			pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
 	
 	def init_target(self):
 		for r in self.Awake:
-			r.targets = self.Sleeping.copy()
+			for rs in self.Sleeping:
+				r.targets.append(rs)
+
+	def get_tot_dist(self):
+		tot = 0
+		for i in range (len(self.Awake)):
+			tot += self.Awake[i].distance
+		return tot
+
+	def random_generation(self, seed, N, K):
+		self.N = N
+		self.Awake = []
+		self.Sleeping = []
+		rd.seed(seed)
+		(m_x, m_y) = rd.randint(0, N-1), rd.randint(0, N-1)
+		self.Awake.append(Robot(m_x, m_y))
+		for i in range(K):
+			rd_nb_x, rd_nb_y = m_x, m_y
+			while (m_x == rd_nb_x and m_y == rd_nb_y):
+				rd_nb_x, rd_nb_y = rd.randint(0, N-1), rd.randint(0, N-1)
+			self.Sleeping.append(Robot(rd_nb_x, rd_nb_y))
+		
 			
 
 class Robot:
@@ -45,6 +72,10 @@ class Robot:
 		self.x = x
 		self.y = y
 		self.targets = targets
+		self.distance = 0
+	
+	def inc_distance(self):
+		self.distance += 1
 
 
 def TowardAwakeRobot(robotA: Robot, robotS: Robot):
@@ -122,8 +153,6 @@ def compute_sub_list(robota: Robot, robotb: Robot, target: Robot) -> list:
 				robota.targets.append(T[i])
 			else:
 				robotb.targets.append(T[i])
-	print(robotb.targets)
-
 
 def are_at_same_place(robota: Robot, robotb: Robot) -> bool:
 	return (robota.x == robotb.x and robota.y == robotb.y)
@@ -149,35 +178,6 @@ def awake_robot(w, idx_a, rs):
 	actual = w.Awake[-1]
 	if (len (w.Awake[idx_a].targets) > 0):
 		compute_sub_list(w.Awake[idx_a], actual, closestRobotInTargets(w.Awake[idx_a], w))
-
-
-def test_execution():
-	N = 20
-	Sleeping = [Robot(x, y, targets) for (x,y,targets) in [[0, 5, []], [5, 6, []], [12, 7, []]]]
-	S = len(Sleeping)
-	Main = Robot( N//2, N//2, Sleeping)
-	Awaken = [Main]
-	w = World(N, Awaken[0], Sleeping)
-	iterations = 0
-	while len(Awaken) <= S:
-		if iterations == 0:
-			compute_sub_list(Awaken[0], closestRobot(w, Awaken[0]))
-			print(Awaken[0].targets)
-			print(closestRobot(w, Awaken[0]))
-		for i in range(len(Awaken)):
-			if len(Awaken[i].targets)!=0:
-				closeRT = closestRobotInTargets(Awaken[i], w)
-				if are_at_same_place(Awaken[i],closeRT) :
-					awake_robot(w, i, closeRT)
-					if len(Awaken[i].targets)!=0:
-						TowardAwakeRobot(Awaken[i], closestRobotInTargets(Awaken[i], w))
-				else:
-					TowardAwakeRobot(
-						Awaken[i], closestRobotInTargets(Awaken[i], w))
-			iterations += 1
-			print(iterations)
-
-	return Sleeping
 
 
 def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
@@ -216,6 +216,29 @@ def travellingSalesman(world: World, screen: pg.Surface, psize: int):
 		pg.display.flip()
 		pg.time.delay(100)
 
+def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
+	screen.fill(pg.Color('black'))
+	iterations = 0
+	while len(w.Sleeping) > 0:
+		for event in pg.event.get():
+			if event.type == pg.QUIT:
+				return
+		for i in range(len(w.Awake)):
+			screen.fill(pg.Color('black'))
+			if len(w.Awake[i].targets)!=0:
+				closeRT = closestRobotInTargets(w.Awake[i], w)
+				if are_at_same_place(w.Awake[i],closeRT) :
+					awake_robot(w, i, closeRT)
+						
+				else:
+					new_closeRT = closestRobotInTargets(w.Awake[i], w)
+					TowardAwakeRobot(w.Awake[i], new_closeRT)
+					w.Awake[i].inc_distance()
+
+		iterations+=1
+		w.update(screen, psize)
+		pg.display.flip()
+
 def screenInit(world, psize):
 	"""Initialize the screen"""
 	pg.init()
@@ -228,43 +251,32 @@ def screenInit(world, psize):
 					psize*robot.y), psize//2) for robot in world.Sleeping]
 	return screen
 
+def save_data_in_file(times, dist):
+	file = open("data.txt", 'w')
+	file.write("times" + "\t" + "distances" + "\n")
+	for i in range (len(times)):
+		file.write(str(times[i]) + "\t" + str(dist[i]) + "\n")
+	file.close()
 
 if __name__ == "__main__":
-	N = 20
-	psize = 20
+	N = 1000
+	psize = 1
 	w = World()
-	w.init_world_from_file(sys.argv[1])
-	screen = screenInit(w, psize)
-	# stupidTravellingSalesman(w, screen, psize)
-	w.init_target()
-	screen = screenInit(w, psize)
-	running = True
-	while running:
-		for event in pg.event.get():
-			if event.type == pg.QUIT:
-				running = False
-		screen.fill(pg.Color('black'))
-		iterations = 0
-		while len(w.Sleeping) > 0:
-			for i in range(len(w.Awake)):
-				screen.fill(pg.Color('black'))
-				if len(w.Awake[i].targets)!=0:
-					closeRT = closestRobotInTargets(w.Awake[i], w)
-					if are_at_same_place(w.Awake[i],closeRT) :
-						awake_robot(w, i, closeRT)
-							
-					else:
-						TowardAwakeRobot(w.Awake[i], closestRobotInTargets(w.Awake[i], w))
-				iterations+=1
-				print(iterations)
-			for a in w.Awake:
-				pg.draw.circle(screen, pg.Color('red'), (psize*a.x, psize*a.y), psize//2)
-
-			for r in w.Sleeping:
-				pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
-
-			pg.display.flip()
-			pg.time.delay(300)
+	#w.init_world_from_file(sys.argv[1])
+	times = []
+	dist = []
+	c = pg.time.Clock()
+	for i in range (10):
+		w.random_generation(i, N, 10)
+		screen = screenInit(w, psize)
+		# stupidTravellingSalesman(w, screen, psize)
+		w.init_target()
+		c.tick()
+		separateLineAlgo(w, screen, psize)
+		c.tick()
+		times.append(c.get_time())
+		dist.append(w.get_tot_dist())
+	save_data_in_file(times, dist)
 
 	pg.quit()
 	quit()
