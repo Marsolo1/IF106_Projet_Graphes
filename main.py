@@ -1,5 +1,6 @@
 import pygame as pg
 import sys
+import random
 
 class World:
 	def __init__(self, N:int=0, Sleeping:list=[], Awake:list=[], Edges:list=[], Obstacles:list=[]):
@@ -21,19 +22,22 @@ class World:
 			elif l[0].isnumeric():
 				self.Sleeping.append(Robot(int(x), int(y)))
 			elif l[0] == 'E':
-				self.Edges.append((
-					self.Awake[0] if x == 'R' else self.Sleeping[int(x)-1],
-					self.Awake[0] if y == 'R' else self.Sleeping[int(y)-1]
-				))
+				robotA = self.Awake[0] if x == 'R' else self.Sleeping[int(x)-1]
+				robotB = self.Awake[0] if y == 'R' else self.Sleeping[int(y)-1]
+				robotA.neighbors.append(robotB)
+				robotB.neighbors.append(robotA)
+				self.Edges.append((robotA, robotB))
 		f.close()
 		self.N = max([self.Awake[0].x, self.Awake[0].y] + [r.x for r in self.Sleeping] + [r.y for r in self.Sleeping]) + 1
 
 	def update(self, screen: pg.Surface, psize: int):
 		screen.fill(pg.Color("lightgray"))
-		for r in self.Awake:
-			pg.draw.circle(screen, pg.Color('red'), (r.x*psize, r.y*psize), psize//2)
 		for r in self.Sleeping:
 			pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
+		for r in self.Awake:
+			pg.draw.circle(screen, pg.Color('red'), (r.x*psize, r.y*psize), psize//2)
+		for t in self.Edges:
+			pg.draw.line(screen, pg.Color('green'), (t[0].x*psize, t[0].y*psize), (t[1].x*psize, t[1].y*psize))
 	
 	def init_target(self):
 		for r in self.Awake:
@@ -41,10 +45,11 @@ class World:
 			
 
 class Robot:
-	def __init__(self, x: int, y: int, targets:list=[]):
+	def __init__(self, x: int, y: int, targets:list=[], neighbors:list=[]):
 		self.x = x
 		self.y = y
 		self.targets = targets
+		self.neighbors = neighbors
 
 
 def TowardAwakeRobot(robotA: Robot, robotS: Robot):
@@ -129,7 +134,6 @@ def are_at_same_place(robota: Robot, robotb: Robot) -> bool:
 	return (robota.x == robotb.x and robota.y == robotb.y)
 
 def wakeUp(world: World, robot: Robot):
-	robot.wakeUp()
 	world.Sleeping.remove(robot)
 	world.Awake.append(robot)
 
@@ -179,37 +183,28 @@ def test_execution():
 
 	return Sleeping
 
-
 def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
+	def chooseTarget(world: World, robot: Robot, target: Robot):
+		newtarget = closestRobot(world, robot)
+		if newtarget is None or target not in newtarget.neighbors or newtarget not in target.neighbors:
+			target = random.choice(world.Sleeping)
+			return chooseTarget(world, robot, target)
+		return newtarget
 	N = world.N
 	main = world.Awake[0]
 	target = closestRobot(world, main)
+	iteration = 0
 	while len(world.Sleeping) > 0:
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				return
+		if target is None or main is None:
+			continue
 		if main.x == target.x and main.y == target.y:
-			target.wakeUp()
 			wakeUp(world, target)
-			target = closestRobot(world, main)
-		TowardAwakeRobot(main, target)
-		world.update(screen, psize)
-		pg.draw.line(screen, pg.Color("black"), (main.x*psize, main.y*psize), (target.x*psize, target.y*psize), width=2)
-		pg.display.flip()
-		pg.time.delay(100)
-
-def travellingSalesman(world: World, screen: pg.Surface, psize: int):
-	N = world.N
-	main = world.Awake[0]
-	target = closestRobot(world, main)
-	while len(world.Sleeping) > 0:
-		for event in pg.event.get():
-			if event.type == pg.QUIT:
-				return
-		if main.x == target.x and main.y == target.y:
-			target.wakeUp()
-			wakeUp(world, target)
-			target = closestRobot(world, main)
+			target = chooseTarget(world, main, target)
+		iteration += 1
+		print(iteration)
 		TowardAwakeRobot(main, target)
 		world.update(screen, psize)
 		pg.draw.line(screen, pg.Color("black"), (main.x*psize, main.y*psize), (target.x*psize, target.y*psize), width=2)
@@ -235,36 +230,35 @@ if __name__ == "__main__":
 	w = World()
 	w.init_world_from_file(sys.argv[1])
 	screen = screenInit(w, psize)
-	# stupidTravellingSalesman(w, screen, psize)
-	w.init_target()
-	screen = screenInit(w, psize)
-	running = True
-	while running:
-		for event in pg.event.get():
-			if event.type == pg.QUIT:
-				running = False
-		screen.fill(pg.Color('black'))
-		iterations = 0
-		while len(w.Sleeping) > 0:
-			for i in range(len(w.Awake)):
-				screen.fill(pg.Color('black'))
-				if len(w.Awake[i].targets)!=0:
-					closeRT = closestRobotInTargets(w.Awake[i], w)
-					if are_at_same_place(w.Awake[i],closeRT) :
-						awake_robot(w, i, closeRT)
+	stupidTravellingSalesman(w, screen, psize)
+	# w.init_target()
+	# running = True
+	# while running:
+	# 	for event in pg.event.get():
+	# 		if event.type == pg.QUIT:
+	# 			running = False
+	# 	screen.fill(pg.Color('black'))
+	# 	iterations = 0
+	# 	while len(w.Sleeping) > 0:
+	# 		for i in range(len(w.Awake)):
+	# 			screen.fill(pg.Color('black'))
+	# 			if len(w.Awake[i].targets)!=0:
+	# 				closeRT = closestRobotInTargets(w.Awake[i], w)
+	# 				if are_at_same_place(w.Awake[i],closeRT) :
+	# 					awake_robot(w, i, closeRT)
 							
-					else:
-						TowardAwakeRobot(w.Awake[i], closestRobotInTargets(w.Awake[i], w))
-				iterations+=1
-				print(iterations)
-			for a in w.Awake:
-				pg.draw.circle(screen, pg.Color('red'), (psize*a.x, psize*a.y), psize//2)
+	# 				else:
+	# 					TowardAwakeRobot(w.Awake[i], closestRobotInTargets(w.Awake[i], w))
+	# 			iterations+=1
+	# 			print(iterations)
+	# 		for a in w.Awake:
+	# 			pg.draw.circle(screen, pg.Color('red'), (psize*a.x, psize*a.y), psize//2)
 
-			for r in w.Sleeping:
-				pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
+	# 		for r in w.Sleeping:
+	# 			pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
 
-			pg.display.flip()
-			pg.time.delay(300)
+	# 		pg.display.flip()
+	# 		pg.time.delay(300)
 
 	pg.quit()
 	quit()
