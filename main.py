@@ -236,6 +236,7 @@ def screenInit(world, psize):
 
 if __name__ == "__main__":
 	N = 20
+	
 	psize = 20
 	w = World()
 	w.init_world_from_file(sys.argv[1])
