@@ -1,3 +1,4 @@
+from time import time
 import pygame as pg
 import sys
 import random as rd
@@ -244,12 +245,6 @@ def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
 	"""
 	Travelling Salesman algorithm (with only one robot moving)
 	"""
-	def chooseTarget(world: World, robot: Robot, target: Robot):
-		newtarget = closestRobot(world, robot)
-		if newtarget is None or target not in newtarget.neighbors or newtarget not in target.neighbors:
-			target = rd.choice(world.Sleeping)
-			return chooseTarget(world, robot, target)
-		return newtarget
 	N = world.N
 	main = world.Awake[0]
 	target = closestRobot(world, main)
@@ -258,17 +253,19 @@ def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
 		for event in pg.event.get():
 			if event.type == pg.QUIT:
 				return
-		if target is None or main is None:
-			continue
 		if main.x == target.x and main.y == target.y:
 			wakeUp(world, target)
-			target = chooseTarget(world, main, target)
+			target = closestRobot(world, main)
+		if target is None or main is None:
+			continue
 		iteration += 1
 		print(iteration)
+		main.inc_distance()
 		TowardAwakeRobot(main, target)
 		world.update(screen, psize)
 		pg.draw.line(screen, pg.Color("black"), (main.x*psize, main.y*psize), (target.x*psize, target.y*psize), width=2)
 		pg.display.flip()
+		pg.time.delay(100)
 
 def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
 	"""
@@ -294,7 +291,7 @@ def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
 		iterations+=1
 		w.update(screen, psize)
 		pg.display.flip()
-		# pg.time.delay(100) uncomment to see the iterations step by step
+		pg.time.delay(100)
 
 def screenInit(world, psize):
 	"""
@@ -320,7 +317,7 @@ def save_data_in_file(times, dist):
 		file.write(str(times[i]) + "\t" + str(dist[i]) + "\n")
 	file.close()
 
-def measure_perf(N, K):
+def measure_perf(N, K, algo):
 	"""
 	Compute 10 times the algorithms with a world of size NxN and K robots
 	"""
@@ -332,7 +329,7 @@ def measure_perf(N, K):
 		screen = screenInit(w, psize)
 		w.init_target()
 		c.tick()
-		separateLineAlgo(w, screen, psize)
+		algo(w, screen, psize)
 		c.tick()
 		times.append(c.get_time())
 		dist.append(w.get_tot_dist())
@@ -342,7 +339,9 @@ if __name__ == "__main__":
 	N = 60
 	psize = 4 # change to 1 in order to optimize the execution time
 	w = World()
-	w.init_world_from_file(sys.argv[1])
-	measure_perf(100, 100)
+	w.init_world_from_file(sys.argv[2])
+	algos = {"stupid": stupidTravellingSalesman, "lines": separateLineAlgo}
+	# measure_perf(100, 100, algos[sys.argv[1]])
+	stupidTravellingSalesman(w, pg.display.set_mode((w.N*psize, w.N*psize)), psize)
 	pg.quit()
 	quit()
