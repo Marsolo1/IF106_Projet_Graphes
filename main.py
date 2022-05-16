@@ -271,6 +271,7 @@ def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
 	"""
 	Separate the world in districts in order to efficiently awake all robots
 	"""
+	w.init_target()
 	screen.fill(pg.Color('black'))
 	iterations = 0
 	while len(w.Sleeping) > 0:
@@ -327,7 +328,6 @@ def measure_perf(N, K, algo):
 		w.random_generation(i, N, K)
 		c = pg.time.Clock()
 		screen = screenInit(w, psize)
-		w.init_target()
 		c.tick()
 		algo(w, screen, psize)
 		c.tick()
@@ -342,6 +342,6 @@ if __name__ == "__main__":
 	w.init_world_from_file(sys.argv[2])
 	algos = {"stupid": stupidTravellingSalesman, "lines": separateLineAlgo}
 	# measure_perf(100, 100, algos[sys.argv[1]])
-	stupidTravellingSalesman(w, pg.display.set_mode((w.N*psize, w.N*psize)), psize)
+	algos[sys.argv[1]](w, pg.display.set_mode((w.N*psize, w.N*psize)), psize)
 	pg.quit()
 	quit()
