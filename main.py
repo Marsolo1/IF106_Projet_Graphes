@@ -4,6 +4,9 @@ import random as rd
 
 class World:
 	def __init__(self, N:int=0, Sleeping:list=[], Awake:list=[], Edges:list=[], Obstacles:list=[]):
+		"""
+		Constructor
+		"""
 		self.N = N
 		self.Awake = Awake
 		self.Sleeping = Sleeping
@@ -11,12 +14,14 @@ class World:
 		self.Edges = Edges
 
 	def init_world_from_file(self, filename):
+		"""
+		Load a file and init the world based on that file
+		"""
 		f = open(filename, 'r')
 		for line in f:
 			l = line.strip().split(" : ")
 			x = l[1].split(",")[0][1:]
 			y = l[1].split(",")[1][:-1]
-			#We suppose that there are only robots and no obstacles
 			if l[0] == 'R':
 				self.Awake.append(Robot(int(x), int(y)))
 			elif l[0].isnumeric():
@@ -31,6 +36,9 @@ class World:
 		self.N = max([self.Awake[0].x, self.Awake[0].y] + [r.x for r in self.Sleeping] + [r.y for r in self.Sleeping]) + 1
 
 	def update(self, screen: pg.Surface, psize: int):
+		"""
+		Update the robots' position and color
+		"""
 		screen.fill(pg.Color("lightgray"))
 		for r in self.Awake:
 			pg.draw.circle(screen, pg.Color('red'), (r.x*psize, r.y*psize), psize//2)
@@ -43,21 +51,31 @@ class World:
 			pg.draw.circle(screen, pg.Color('blue'), (r.x*psize, r.y*psize), psize//2)
 		for r in self.Awake:
 			pg.draw.circle(screen, pg.Color('red'), (r.x*psize, r.y*psize), psize//2)
-		for t in self.Edges:
-			pg.draw.line(screen, pg.Color('green'), (t[0].x*psize, t[0].y*psize), (t[1].x*psize, t[1].y*psize))
+		#not used
+		# for t in self.Edges:
+		# 	pg.draw.line(screen, pg.Color('green'), (t[0].x*psize, t[0].y*psize), (t[1].x*psize, t[1].y*psize))
 	
 	def init_target(self):
+		"""
+		Init the target array at the start of the algorithm
+		"""
 		for r in self.Awake:
 			for rs in self.Sleeping:
 				r.targets.append(rs)
 
 	def get_tot_dist(self):
+		"""
+		Compute the total distance traveled by all the robots awake
+		"""
 		tot = 0
 		for i in range (len(self.Awake)):
 			tot += self.Awake[i].distance
 		return tot
 
 	def random_generation(self, seed, N, K):
+		"""
+		Generate a random world based on its size N and a number of robot K
+		"""
 		self.N = N
 		self.Awake = []
 		self.Sleeping = []
@@ -74,6 +92,9 @@ class World:
 
 class Robot:
 	def __init__(self, x: int, y: int, targets:list=[], neighbors:list=[]):
+		"""
+		Constructor
+		"""
 		self.x = x
 		self.y = y
 		self.targets = targets
@@ -81,12 +102,17 @@ class Robot:
 		self.neighbors = neighbors
 	
 	def inc_distance(self):
+		"""
+		Increase the distance traveled by the robot
+		"""
 		self.distance += 1
 		
 
 
 def TowardAwakeRobot(robotA: Robot, robotS: Robot):
-	"""Move robotA toward robotS"""
+	"""
+	Move robotA toward robotS
+	"""
 	diff_x = robotA.x - robotS.x
 	diff_y = robotA.y - robotS.y
 
@@ -103,7 +129,9 @@ def TowardAwakeRobot(robotA: Robot, robotS: Robot):
 
 
 def closestRobot(world: World, robotA: Robot) -> Robot:
-	"""Look for the closest robot"""
+	"""
+	Look for the closest robot
+	"""
 	n = world.N
 	x_max, y_max = n, n
 	r = None
@@ -116,7 +144,9 @@ def closestRobot(world: World, robotA: Robot) -> Robot:
 	return r
 
 def closestRobotInTargets(robotA: Robot, world: World) -> Robot:
-	"""Look for the closest robot"""
+	"""
+	Look for the closest robot in the targets param of the robotA
+	"""
 	n = world.N
 	x_max, y_max = n, n
 	r = None
@@ -130,7 +160,15 @@ def closestRobotInTargets(robotA: Robot, world: World) -> Robot:
 
 
 def compute_sub_list(robota: Robot, robotb: Robot, target: Robot) -> list:
+	"""
+	Generate two lists of targets by separating the robots
+	above and below a line. The line traced is between robota and target
+	the lists of targets are then associated to robota and robotb
+	"""
 	def compute_coef(robota, robotb):
+		"""
+		Compute the coeffcients for the line between robota and robotb
+		"""
 		def compute_affine(xa, xb, ya, yb):
 			a = (yb-ya)/(xb-xa)
 			b = ya-a*xa
@@ -138,6 +176,9 @@ def compute_sub_list(robota: Robot, robotb: Robot, target: Robot) -> list:
 		return compute_affine(robota.x, robotb.x, robota.y, robotb.y)
 
 	def separate(T, a, b):
+		"""
+		Separate all the robots in T based on their position compared to the line ax + b
+		"""
 		T1 = []
 		T2 = []
 		for i in range(len(T)):
@@ -146,6 +187,7 @@ def compute_sub_list(robota: Robot, robotb: Robot, target: Robot) -> list:
 			else:
 				T2.append(T[i])
 		return (T1,T2)
+
 	T=robota.targets
 	if robota.x != target.x:
 		(a, b) = compute_coef(robota, target)
@@ -162,13 +204,22 @@ def compute_sub_list(robota: Robot, robotb: Robot, target: Robot) -> list:
 				robotb.targets.append(T[i])
 
 def are_at_same_place(robota: Robot, robotb: Robot) -> bool:
+	"""
+	Return whether the robot are at the same place
+	"""
 	return (robota.x == robotb.x and robota.y == robotb.y)
 
 def wakeUp(world: World, robot: Robot):
+	"""
+	Wake up a robot
+	"""
 	world.Sleeping.remove(robot)
 	world.Awake.append(robot)
 
 def remove_from_targets(w,rs):
+	"""
+	Remove a robot rs from all the targets of all awake robots
+	"""
 	for r in w.Awake:
 		if len(r.targets) == 0:
 			continue
@@ -178,6 +229,9 @@ def remove_from_targets(w,rs):
 				continue
 
 def awake_robot(w, idx_a, rs):
+	"""
+	Wake up a robot and compute the targets for the newly awoken robot
+	"""
 	w.Sleeping.remove(rs)
 	w.Awake.append(rs)
 	remove_from_targets(w, rs)
@@ -187,6 +241,9 @@ def awake_robot(w, idx_a, rs):
 
 
 def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
+	"""
+	Travelling Salesman algorithm (with only one robot moving)
+	"""
 	def chooseTarget(world: World, robot: Robot, target: Robot):
 		newtarget = closestRobot(world, robot)
 		if newtarget is None or target not in newtarget.neighbors or newtarget not in target.neighbors:
@@ -212,9 +269,11 @@ def stupidTravellingSalesman(world: World, screen: pg.Surface, psize: int):
 		world.update(screen, psize)
 		pg.draw.line(screen, pg.Color("black"), (main.x*psize, main.y*psize), (target.x*psize, target.y*psize), width=2)
 		pg.display.flip()
-		pg.time.delay(100)
 
 def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
+	"""
+	Separate the world in districts in order to efficiently awake all robots
+	"""
 	screen.fill(pg.Color('black'))
 	iterations = 0
 	while len(w.Sleeping) > 0:
@@ -229,16 +288,18 @@ def separateLineAlgo(w: World, screen: pg.Surface, psize: int):
 					awake_robot(w, i, closeRT)
 						
 				else:
-					new_closeRT = closestRobotInTargets(w.Awake[i], w)
-					TowardAwakeRobot(w.Awake[i], new_closeRT)
+					TowardAwakeRobot(w.Awake[i], closeRT)
 					w.Awake[i].inc_distance()
 
 		iterations+=1
 		w.update(screen, psize)
 		pg.display.flip()
+		# pg.time.delay(100) uncomment to see the iterations step by step
 
 def screenInit(world, psize):
-	"""Initialize the screen"""
+	"""
+	Initialize the screen
+	"""
 	pg.init()
 	screen = pg.display.set_mode((world.N*psize, world.N*psize))
 	pg.display.set_caption('Robots')
@@ -250,24 +311,25 @@ def screenInit(world, psize):
 	return screen
 
 def save_data_in_file(times, dist):
+	"""
+	Save performances measurements in a file
+	"""
 	file = open("data.txt", 'w')
 	file.write("times" + "\t" + "distances" + "\n")
 	for i in range (len(times)):
 		file.write(str(times[i]) + "\t" + str(dist[i]) + "\n")
 	file.close()
 
-if __name__ == "__main__":
-	N = 1000
-	psize = 1
-	w = World()
-	#w.init_world_from_file(sys.argv[1])
+def measure_perf(N, K):
+	"""
+	Compute 10 times the algorithms with a world of size NxN and K robots
+	"""
 	times = []
 	dist = []
-	c = pg.time.Clock()
 	for i in range (10):
-		w.random_generation(i, N, 10)
+		w.random_generation(i, N, K)
+		c = pg.time.Clock()
 		screen = screenInit(w, psize)
-		# stupidTravellingSalesman(w, screen, psize)
 		w.init_target()
 		c.tick()
 		separateLineAlgo(w, screen, psize)
@@ -276,5 +338,11 @@ if __name__ == "__main__":
 		dist.append(w.get_tot_dist())
 	save_data_in_file(times, dist)
 
+if __name__ == "__main__":
+	N = 60
+	psize = 4 # change to 1 in order to optimize the execution time
+	w = World()
+	w.init_world_from_file(sys.argv[1])
+	measure_perf(100, 100)
 	pg.quit()
 	quit()
